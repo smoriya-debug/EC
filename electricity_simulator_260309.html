@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-dash 電力シミュレーター ver1.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.12.0/pptxgen.min.js"></script>
+<style>
+:root{
+  --bg:#030712;
+  --bg2:#0a1120;
+  --card-bg:rgba(17,24,39,0.65);
+  --primary:#02BFA6;
+  --primary-light:#03D4B8;
+  --primary-dark:#028A7B;
+  --secondary:#059669;
+  --accent:#f59e0b;
+  --success:#10b981;
+  --danger:#ef4444;
+  --text:#f9fafb;
+  --text-dim:#9ca3af;
+  --text-muted:#6b7280;
+  --border:rgba(255,255,255,0.08);
+  --border-bright:rgba(2,191,166,0.25);
+  --glow:0 0 25px rgba(2,191,166,0.35);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  background-image:
+    radial-gradient(circle at 0% 0%,rgba(2,191,166,0.08) 0%,transparent 50%),
+    radial-gradient(circle at 100% 100%,rgba(5,150,105,0.06) 0%,transparent 50%);
+  background-attachment:fixed;
+  line-height:1.6;
+  min-height:100vh;
+}
+
+header{
+  text-align:center;
+  padding:60px 20px 40px;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+
+header::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:60%;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--primary),transparent);
+  opacity:0.6;
+}
+
+.logo-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 16px;
+  background:rgba(2,191,166,0.08);
+  border:1px solid var(--border-bright);
+  border-radius:100px;
+  margin-bottom:20px;
+  font-size:11px;
+  font-weight:800;
+  color:var(--primary);
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+}
+
+.logo{
+  font-size:clamp(32px,5vw,48px);
+  font-weight:900;
+  background:linear-gradient(135deg,#fff 0%,var(--primary) 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  letter-spacing:-0.02em;
+  margin-bottom:12px;
+}
+
+.tagline{
+  font-size:clamp(13px,2vw,15px);
+  color:var(--text-dim);
+  font-weight:500;
+  letter-spacing:0.02em;
+  margin-bottom:20px;
+}
+
+.badges{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.badge{
+  font-size:10px;
+  font-weight:700;
+  padding:6px 14px;
+  border-radius:20px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  border:1px solid var(--border-bright);
+  color:var(--primary);
+  background:rgba(2,191,166,0.05);
+  transition:all 0.2s;
+}
+
+.badge:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--glow);
+}
+
+.container{
+  max-width:1400px;
+  margin:0 auto;
+  padding:clamp(20px,4vw,40px) 20px clamp(40px,6vw,80px);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));
+  gap:24px;
+}
+
+.glass-card{
+  background:var(--card-bg);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:clamp(24px,4vw,32px);
+  transition:all 0.3s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.glass-card::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--primary),transparent);
+  opacity:0.3;
+}
+
+.glass-card:hover{
+  border-color:var(--border-bright);
+  transform:translateY(-2px);
+}
+
+.section-title{
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  color:var(--primary);
+  letter-spacing:0.15em;
+  margin-bottom:24px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.section-title::before{
+  content:'';
+  width:4px;
+  height:18px;
+  background:var(--primary);
+  border-radius:4px;
+  box-shadow:var(--glow);
+}
+
+.form-group{
+  margin-bottom:20px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  color:var(--text-dim);
+  margin-bottom:8px;
+  letter-spacing:0.01em;
+}
+
+select,input[type="number"]{
+  width:100%;
+  padding:12px 16px;
+  background:rgba(0,0,0,0.25);
+  border:1px solid var(--border);
+  border-radius:12px;
+  color:var(--text);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  outline:none;
+  transition:all 0.2s;
+  appearance:none;
+}
+
+select{
+  background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2302BFA6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:40px;
+}
+
+select:focus,input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px rgba(2,191,166,0.15);
+}
+
+.plan-details{
+  background:rgba(2,191,166,0.06);
+  border:1px solid var(--border-bright);
+  border-radius:12px;
+  padding:16px 20px;
+  margin-top:12px;
+  display:none;
+}
+
+.plan-details.active{
+  display:block;
+  animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(-10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.plan-detail-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  font-size:12px;
+}
+
+.plan-detail-row:last-child{
+  border-bottom:none;
+}
+
+.plan-detail-label{
+  color:var(--text-dim);
+  font-weight:600;
+}
+
+.plan-detail-value{
+  font-family:'JetBrains Mono',monospace;
+  color:var(--primary);
+  font-weight:700;
+  font-size:13px;
+}
+
+.input-mode-tabs{
+  display:flex;
+  gap:6px;
+  background:rgba(255,255,255,0.03);
+  padding:6px;
+  border-radius:14px;
+  margin-bottom:20px;
+}
+
+.input-mode-btn{
+  flex:1;
+  padding:10px 12px;
+  background:transparent;
+  border:none;
+  color:var(--text-dim);
+  border-radius:10px;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:700;
+  transition:all 0.2s;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+.input-mode-btn.active{
+  background:var(--primary);
+  color:#000;
+  box-shadow:var(--glow);
+}
+
+.input-mode-btn:hover:not(.active){
+  background:rgba(2,191,166,0.1);
+}
+
+.quick-input{
+  display:none;
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.quick-input.active{
+  display:flex;
+}
+
+.quick-input input{
+  flex:1;
+}
+
+.preset-btns{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.preset-btn{
+  padding:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:12px;
+  color:var(--text);
+  font-size:11px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s;
+  text-align:center;
+}
+
+.preset-btn:hover{
+  border-color:var(--primary);
+  background:rgba(2,191,166,0.08);
+}
+
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+.month-cell{
+  text-align:center;
+}
+
+.month-cell label{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-bottom:6px;
+  display:block;
+}
+
+.month-cell input{
+  text-align:center;
+  padding:10px 6px;
+  font-size:13px;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:600;
+}
+
+.month-cell.summer input{
+  border-color:rgba(245,158,11,0.4);
+  background:rgba(245,158,11,0.06);
+}
+
+.fuel-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+
+.fuel-cell{
+  position:relative;
+}
+
+.fuel-cell label{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+
+.fuel-cell input{
+  text-align:center;
+  padding:10px 6px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+.support-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:12px;
+}
+
+.support-cell{
+  position:relative;
+}
+
+.support-cell label{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
+
+.support-cell input{
+  text-align:center;
+  padding:10px 6px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  border-color:rgba(16,185,129,0.4);
+  background:rgba(16,185,129,0.06);
+}
+
+.fuel-note{
+  background:rgba(2,191,166,0.06);
+  border-left:3px solid var(--primary);
+  padding:14px 18px;
+  border-radius:0 12px 12px 0;
+  margin-bottom:16px;
+  font-size:11px;
+  color:var(--text-dim);
+  line-height:1.7;
+}
+
+.fuel-note strong{
+  color:var(--primary);
+  font-weight:700;
+}
+
+.btn-primary{
+  width:100%;
+  padding:18px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:#fff;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  transition:all 0.3s;
+  box-shadow:0 10px 30px -10px rgba(2,191,166,0.4);
+  margin-top:24px;
+  text-transform:uppercase;
+}
+
+.btn-primary:hover{
+  transform:translateY(-3px);
+  box-shadow:0 15px 40px -10px rgba(2,191,166,0.5);
+  filter:brightness(1.1);
+}
+
+.btn-primary:active{
+  transform:translateY(0);
+}
+
+.btn-download{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--success),#059669);
+  color:#fff;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  cursor:pointer;
+  transition:all 0.3s;
+  margin-top:12px;
+  text-transform:uppercase;
+}
+
+.btn-download:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px -10px rgba(16,185,129,0.5);
+}
+
+.btn-download.ppt{
+  background:linear-gradient(135deg,#f59e0b,#d97706);
+}
+
+.btn-download.ppt:hover{
+  box-shadow:0 10px 30px -10px rgba(245,158,11,0.5);
+}
+
+#results{
+  margin-top:40px;
+  display:none;
+  animation:fadeUp 0.6s ease;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(30px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.summary-card{
+  background:linear-gradient(135deg,var(--card-bg),rgba(2,191,166,0.05));
+  backdrop-filter:blur(20px);
+  border:1px solid var(--border-bright);
+  border-radius:24px;
+  padding:clamp(28px,5vw,40px);
+  text-align:center;
+  margin-bottom:28px;
+  position:relative;
+  overflow:hidden;
+}
+
+.summary-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(2,191,166,0.12),transparent 70%);
+  pointer-events:none;
+}
+
+.summary-label{
+  font-size:11px;
+  font-weight:800;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  margin-bottom:16px;
+}
+
+.summary-amount{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(42px,8vw,72px);
+  font-weight:900;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  line-height:1;
+  text-shadow:0 0 40px rgba(2,191,166,0.5);
+  position:relative;
+}
+
+.summary-sub{
+  font-size:13px;
+  color:var(--text-dim);
+  margin-top:12px;
+  font-weight:500;
+}
+
+.co2-card{
+  background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(2,191,166,0.05));
+  border:1px solid rgba(16,185,129,0.3);
+  border-radius:18px;
+  padding:22px;
+  margin-top:20px;
+  text-align:center;
+}
+
+.co2-label{
+  font-size:11px;
+  color:var(--success);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  margin-bottom:10px;
+}
+
+.co2-amount{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(26px,5vw,38px);
+  font-weight:900;
+  color:var(--success);
+  text-shadow:0 0 20px rgba(16,185,129,0.4);
+}
+
+.co2-sub{
+  font-size:10px;
+  color:var(--text-dim);
+  margin-top:8px;
+}
+
+.breakdown-list{
+  list-style:none;
+}
+
+.breakdown-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:13px;
+  gap:16px;
+}
+
+.breakdown-item:last-child{
+  border:none;
+}
+
+.breakdown-key{
+  color:var(--text-dim);
+  font-weight:500;
+  font-size:12px;
+}
+
+.breakdown-val{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  color:var(--text);
+}
+
+.breakdown-sub{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-top:4px;
+  font-style:italic;
+}
+
+.breakdown-total{
+  background:rgba(2,191,166,0.06);
+  border-radius:14px;
+  padding:18px 22px;
+  margin-top:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border:1px solid var(--border-bright);
+}
+
+.breakdown-total .key{
+  font-size:13px;
+  font-weight:800;
+  color:var(--primary);
+}
+
+.breakdown-total .val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:22px;
+  font-weight:900;
+  color:var(--primary);
+  text-shadow:var(--glow);
+}
+
+.arr-card{
+  background:linear-gradient(135deg,rgba(5,150,105,0.1),rgba(2,191,166,0.05));
+  border:1px solid rgba(5,150,105,0.3);
+  border-radius:20px;
+  padding:26px;
+  margin-top:24px;
+  text-align:center;
+}
+
+.arr-label{
+  font-size:12px;
+  color:var(--secondary);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  margin-bottom:14px;
+}
+
+.arr-amount{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(30px,5vw,44px);
+  font-weight:900;
+  color:var(--secondary);
+  text-shadow:0 0 25px rgba(5,150,105,0.4);
+}
+
+.arr-sub{
+  font-size:11px;
+  color:var(--text-dim);
+  margin-top:10px;
+}
+
+.chart-container{
+  margin-top:20px;
+  padding:24px 18px;
+  background:rgba(0,0,0,0.2);
+  border-radius:14px;
+  border:1px solid var(--border);
+}
+
+.chart-bars{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  height:200px;
+  padding-bottom:10px;
+  border-bottom:2px solid var(--border);
+}
+
+.chart-col{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  justify-content:flex-end;
+  height:100%;
+  position:relative;
+}
+
+.chart-bar{
+  width:100%;
+  border-radius:6px 6px 0 0;
+  min-height:10px;
+  transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  position:relative;
+  cursor:pointer;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding-bottom:6px;
+  font-size:9px;
+  font-weight:700;
+  color:rgba(255,255,255,0.9);
+}
+
+.chart-bar.normal{
+  background:linear-gradient(180deg,var(--primary),var(--primary-dark));
+}
+
+.chart-bar.summer{
+  background:linear-gradient(180deg,var(--accent),#d97706);
+}
+
+.chart-bar:hover{
+  filter:brightness(1.25);
+  transform:translateY(-4px);
+}
+
+.chart-label{
+  font-size:10px;
+  color:var(--text-muted);
+  font-weight:700;
+  margin-top:6px;
+}
+
+.chart-amount{
+  position:absolute;
+  top:-26px;
+  font-size:9px;
+  font-weight:700;
+  color:var(--text);
+  background:rgba(0,0,0,0.7);
+  padding:3px 8px;
+  border-radius:6px;
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity 0.2s;
+}
+
+.chart-col:hover .chart-amount{
+  opacity:1;
+}
+
+.tabs{
+  display:flex;
+  gap:6px;
+  background:rgba(255,255,255,0.03);
+  padding:6px;
+  border-radius:14px;
+  margin-bottom:24px;
+  flex-wrap:wrap;
+}
+
+.tab{
+  flex:1;
+  min-width:100px;
+  padding:11px 14px;
+  background:transparent;
+  border:none;
+  color:var(--text-dim);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  border-radius:10px;
+  transition:all 0.2s;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+.tab.active{
+  background:var(--primary);
+  color:#000;
+  box-shadow:var(--glow);
+}
+
+.tab:hover:not(.active){
+  background:rgba(2,191,166,0.1);
+}
+
+.provider-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+  margin-top:12px;
+}
+
+.provider-card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:20px;
+  transition:all 0.2s;
+  cursor:pointer;
+}
+
+.provider-card:hover{
+  transform:translateY(-3px);
+  border-color:var(--border-bright);
+}
+
+.provider-card.best{
+  border-color:var(--success);
+  background:rgba(16,185,129,0.06);
+  box-shadow:0 0 20px rgba(16,185,129,0.15);
+}
+
+.provider-card.jepx{
+  border-color:var(--accent);
+  background:rgba(245,158,11,0.06);
+}
+
+.provider-card.regil{
+  border-color:var(--secondary);
+  background:rgba(5,150,105,0.06);
+}
+
+.provider-card.marubeni{
+  border-color:rgba(2,191,166,0.5);
+  background:rgba(2,191,166,0.06);
+}
+
+.provider-card.reduction{
+  border-color:rgba(139,92,246,0.5);
+  background:rgba(139,92,246,0.06);
+}
+
+.provider-name{
+  font-size:14px;
+  font-weight:800;
+  color:var(--text);
+  margin-bottom:8px;
+}
+
+.provider-card.jepx .provider-name{
+  color:var(--accent);
+}
+
+.provider-card.regil .provider-name{
+  color:var(--secondary);
+}
+
+.provider-card.marubeni .provider-name{
+  color:var(--primary);
+}
+
+.provider-card.reduction .provider-name{
+  color:#a78bfa;
+}
+
+.provider-type{
+  font-size:10px;
+  color:var(--text-muted);
+  margin-bottom:14px;
+  line-height:1.5;
+}
+
+.provider-price{
+  font-family:'JetBrains Mono',monospace;
+  font-size:20px;
+  font-weight:900;
+  color:var(--primary);
+  margin-bottom:6px;
+}
+
+.provider-card.jepx .provider-price{
+  color:var(--accent);
+}
+
+.provider-card.regil .provider-price{
+  color:var(--secondary);
+}
+
+.provider-card.marubeni .provider-price{
+  color:var(--primary);
+}
+
+.provider-card.reduction .provider-price{
+  color:#a78bfa;
+}
+
+.provider-saving{
+  font-size:11px;
+  font-weight:700;
+}
+
+.provider-saving.positive{
+  color:var(--success);
+}
+
+.provider-saving.negative{
+  color:var(--danger);
+}
+
+.crown{
+  font-size:10px;
+  color:var(--success);
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.savings-box{
+  background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(2,191,166,0.05));
+  border:1px solid rgba(16,185,129,0.3);
+  border-radius:18px;
+  padding:30px;
+  margin-top:28px;
+  text-align:center;
+}
+
+.savings-label{
+  font-size:12px;
+  color:var(--success);
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  margin-bottom:14px;
+}
+
+.savings-amount{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(34px,6vw,54px);
+  font-weight:900;
+  color:var(--success);
+  text-shadow:0 0 25px rgba(16,185,129,0.4);
+}
+
+.savings-sub{
+  font-size:12px;
+  color:var(--text-dim);
+  margin-top:12px;
+}
+
+.data-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:18px;
+  font-size:12px;
+}
+
+.data-table th{
+  background:rgba(2,191,166,0.06);
+  color:var(--primary);
+  font-weight:700;
+  padding:12px;
+  text-align:left;
+  border-bottom:2px solid var(--border);
+}
+
+.data-table td{
+  padding:12px;
+  border-bottom:1px solid var(--border);
+  font-family:'JetBrains Mono',monospace;
+  color:var(--text);
+}
+
+.data-table tr:hover td{
+  background:rgba(2,191,166,0.04);
+}
+
+.table-wrap{
+  overflow-x:auto;
+  margin-top:12px;
+}
+
+.note{
+  font-size:11px;
+  color:var(--text-muted);
+  margin-top:18px;
+  line-height:1.8;
+  opacity:0.85;
+}
+
+.info-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(245,158,11,0.1);
+  border:1px solid rgba(245,158,11,0.3);
+  color:var(--accent);
+  font-size:10px;
+  font-weight:700;
+  padding:4px 12px;
+  border-radius:20px;
+  letter-spacing:0.5px;
+  margin-left:8px;
+  vertical-align:middle;
+}
+
+@media(max-width:768px){
+  .month-grid{grid-template-columns:repeat(3,1fr);}
+  .fuel-grid{grid-template-columns:repeat(3,1fr);}
+  .support-grid{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">⚡ ver 1.2</div>
+  <div class="logo">e-dash 電力シミュレーター</div>
+  <div class="tagline">法人向け高圧・特別高圧 | 力率100%・容量拠出金込み・CO2排出量試算</div>
+  <div class="badges">
+    <span class="badge">高圧 6kV</span>
+    <span class="badge">特別高圧 20-140kV</span>
+    <span class="badge">JEPX市場連動</span>
+    <span class="badge">地域別料金</span>
+    <span class="badge">CO2算定</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <div class="glass-card">
+      <div class="section-title">基本設定</div>
+      
+      <div class="form-group">
+        <label>電力エリア</label>
+        <select id="area" onchange="onAreaChange()">
+          <option value="hokkaido">北海道電力エリア</option>
+          <option value="tohoku">東北電力エリア</option>
+          <option value="tepco">東京電力エリア</option>
+          <option value="chubu">中部電力エリア</option>
+          <option value="hokuriku">北陸電力エリア</option>
+          <option value="kepco">関西電力エリア</option>
+          <option value="chugoku">中国電力エリア</option>
+          <option value="shikoku">四国電力エリア</option>
+          <option value="kyushu">九州電力エリア</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>電力プラン（エリアにより自動更新）</label>
+        <select id="plan" style="font-size:12px;" onchange="onPlanChange()"></select>
+        
+        <div id="plan_details" class="plan-details">
+          <div class="plan-detail-row">
+            <span class="plan-detail-label">基本料金単価</span>
+            <span class="plan-detail-value" id="plan_basic_rate">—</span>
+          </div>
+          <div class="plan-detail-row">
+            <span class="plan-detail-label">夏季従量料金単価（7-9月）</span>
+            <span class="plan-detail-value" id="plan_summer_rate">—</span>
+          </div>
+          <div class="plan-detail-row">
+            <span class="plan-detail-label">その他季従量料金単価</span>
+            <span class="plan-detail-value" id="plan_other_rate">—</span>
+          </div>
+          <div class="plan-detail-row">
+            <span class="plan-detail-label">力率100%割引適用後</span>
+            <span class="plan-detail-value" id="plan_basic_discounted">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>契約電力（kW）</label>
+        <input type="number" id="contract_kw" value="100" min="1" max="99999" step="1">
+      </div>
+
+      <div class="form-group">
+        <label>追加割引（円/kWh）<span class="info-badge">従量料金単価から値引き</span></label>
+        <input type="number" id="additional_discount" value="0" min="0" max="10" step="0.1">
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">従量料金単価から引かれる金額を入力してください（例：0.5円/kWh）</div>
+      </div>
+
+      <div style="background:rgba(2,191,166,0.06);border-radius:12px;padding:14px;margin-top:14px;">
+        <div style="font-size:11px;color:var(--text-dim);line-height:1.7;">
+          <strong style="color:var(--primary);">💡 容量拠出金・再エネ賦課金について</strong><br>
+          容量拠出金は基本料金単価に含まれています。再エネ賦課金は年度別で適用されます（2024年度：1.40円、2025年度：3.49円、2026年度：3.98円）。
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title">12ヶ月使用電力量（kWh）</div>
+      
+      <div class="input-mode-tabs">
+        <button class="input-mode-btn active" onclick="switchInputMode('manual')">個別入力</button>
+        <button class="input-mode-btn" onclick="switchInputMode('quick')">かんたん入力</button>
+        <button class="input-mode-btn" onclick="switchInputMode('preset')">パターン選択</button>
+      </div>
+
+      <div id="quick-input-container" class="quick-input">
+        <div style="flex:1;">
+          <label style="font-size:11px;margin-bottom:4px;">年間合計（kWh）</label>
+          <input type="number" id="quick_total" placeholder="例：1,000,000" min="0" oninput="quickDistribute()">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;margin-bottom:4px;">夏季増加率（%）</label>
+          <input type="number" id="quick_summer" value="15" min="0" max="100" oninput="quickDistribute()">
+        </div>
+      </div>
+
+      <div id="preset-container" class="preset-btns" style="display:none;">
+        <button class="preset-btn" onclick="applyPreset('flat')">📊 平準型<br><span style="font-size:9px;color:var(--text-muted);">年間ほぼ均等</span></button>
+        <button class="preset-btn" onclick="applyPreset('summer')">🌡 夏季ピーク型<br><span style="font-size:9px;color:var(--text-muted);">7-9月多い</span></button>
+        <button class="preset-btn" onclick="applyPreset('winter')">❄️ 冬季ピーク型<br><span style="font-size:9px;color:var(--text-muted);">12-2月多い</span></button>
+        <button class="preset-btn" onclick="applyPreset('office')">🏢 オフィス型<br><span style="font-size:9px;color:var(--text-muted);">業務用標準</span></button>
+      </div>
+
+      <p style="font-size:11px;color:var(--accent);margin-bottom:14px;">⚡ 夏季（7・8・9月）は電力量単価が高くなる場合があります</p>
+
+      <div class="month-grid">
+        <div class="month-cell"><label>1月</label><input type="number" class="monthly-input" data-month="0" value="85000" min="0"></div>
+        <div class="month-cell"><label>2月</label><input type="number" class="monthly-input" data-month="1" value="78000" min="0"></div>
+        <div class="month-cell"><label>3月</label><input type="number" class="monthly-input" data-month="2" value="72000" min="0"></div>
+        <div class="month-cell"><label>4月</label><input type="number" class="monthly-input" data-month="3" value="65000" min="0"></div>
+        <div class="month-cell"><label>5月</label><input type="number" class="monthly-input" data-month="4" value="60000" min="0"></div>
+        <div class="month-cell"><label>6月</label><input type="number" class="monthly-input" data-month="5" value="68000" min="0"></div>
+        <div class="month-cell summer"><label>7月 🌡</label><input type="number" class="monthly-input" data-month="6" value="92000" min="0"></div>
+        <div class="month-cell summer"><label>8月 🌡</label><input type="number" class="monthly-input" data-month="7" value="98000" min="0"></div>
+        <div class="month-cell summer"><label>9月 🌡</label><input type="number" class="monthly-input" data-month="8" value="82000" min="0"></div>
+        <div class="month-cell"><label>10月</label><input type="number" class="monthly-input" data-month="9" value="70000" min="0"></div>
+        <div class="month-cell"><label>11月</label><input type="number" class="monthly-input" data-month="10" value="75000" min="0"></div>
+        <div class="month-cell"><label>12月</label><input type="number" class="monthly-input" data-month="11" value="82000" min="0"></div>
+      </div>
+
+      <div style="margin-top:16px;padding:16px 20px;background:rgba(2,191,166,0.06);border-radius:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border-bright);">
+        <span style="font-size:12px;color:var(--text-dim);font-weight:600;">年間合計使用量</span>
+        <span id="total_kwh_display" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:900;color:var(--primary);">— kWh</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-card" style="margin-top:24px;">
+    <div class="section-title">燃料費調整単価（円/kWh）— 2025年 月別</div>
+    
+    <div class="fuel-note" id="fuel_note">エリアを選択すると2025年の小売事業者公表単価（高圧・特別高圧、市場調整含む）が自動反映されます。</div>
+
+    <div class="fuel-grid" id="fuel_grid"></div>
+
+    <div style="margin-top:24px;">
+      <label style="margin-bottom:12px;">国による支援等（円/kWh・税込）<span class="info-badge">激変緩和措置など</span></label>
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:10px;line-height:1.6;">
+        2025年の激変緩和措置（高圧電力：1~3月・7~9月、特別高圧：対象外）をデフォルト反映済み。必要に応じて変更可能です。
+      </div>
+      <div class="support-grid" id="support_grid"></div>
+    </div>
+
+    <button class="btn-primary" onclick="calculate()">⚡ 試算を実行</button>
+  </div>
+
+  <div id="results">
+    <div class="summary-card">
+      <div class="summary-label" id="summary_label">年間電気料金（推計）</div>
+      <div class="summary-amount" id="annual_total">—</div>
+      <div class="summary-sub" id="monthly_avg_display"></div>
+      
+      <div class="co2-card">
+        <div class="co2-label">🌱 年間CO2排出量</div>
+        <div class="co2-amount" id="co2_amount">—</div>
+        <div class="co2-sub">全国平均係数 0.000423 t-CO2/kWh 使用</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="glass-card">
+        <div class="section-title">料金内訳（年間・税込）</div>
+        <ul class="breakdown-list" id="breakdown_list"></ul>
+        <div class="breakdown-total">
+          <span class="key">年間合計（税込）</span>
+          <span class="val" id="breakdown_total_val">—</span>
+        </div>
+        <p class="note">※料金単価・再エネ賦課金単価は年度別に適用。力率100%として基本料金から15%割引適用済み（契約電力×単価×12×0.85）。基本料金単価には容量拠出金が含まれています。燃料費調整単価には市場調整が含まれています。再エネ賦課金・国の支援は非課税。端数処理は電力会社約款に準じて切り捨て処理。消費税10%込み。</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="section-title">月別電力コスト</div>
+        <div class="chart-container">
+          <div class="chart-bars" id="monthly_bars"></div>
+        </div>
+        <div style="margin-top:20px;font-size:11px;color:var(--text-dim);line-height:1.8;" id="tier_info"></div>
+      </div>
+    </div>
+
+    <div class="arr-card">
+      <div class="arr-label">💡 e-dash想定ARR（年間収益見込み）</div>
+      <div class="arr-amount" id="arr_amount">—</div>
+      <div class="arr-sub" id="arr_sub">2つの計算方式による推定レンジ</div>
+    </div>
+
+    <div class="glass-card" style="margin-top:24px;">
+      <div class="section-title">新電力プラン比較</div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(this,'marubeni')">丸紅新電力</button>
+        <button class="tab" onclick="switchTab(this,'regil')">レジル</button>
+        <button class="tab" onclick="switchTab(this,'reduce5')">5%削減イメージ</button>
+        <button class="tab" onclick="switchTab(this,'reduce10')">10%削減イメージ</button>
+        <button class="tab" onclick="switchTab(this,'jepx')">JEPX市場連動</button>
+      </div>
+      <div class="provider-grid" id="provider_grid"></div>
+      <div class="savings-box">
+        <div class="savings-label">🏆 最大節約効果（年間）</div>
+        <div class="savings-amount" id="best_saving_amount">—</div>
+        <div class="savings-sub" id="best_saving_sub">—</div>
+      </div>
+      <p class="note">※丸紅新電力は基本料金1,716.26円/kW（全国一律）、夏季20.74円/kWh・その他季19.65円/kWh。レジル株式会社は基本料金1,700円/kW、従量単価は選択エリアの旧一般電気事業者と同額。5%・10%削減イメージは現在の年間料金から削減した場合の参考値。JEPX市場連動型イメージは基本料金を現行プランと同額、JEPX市場価格+手数料3円/kWhで試算。実際の料金は需要規模・地点・契約期間・入札条件等により異なるため、必ず各社へ正式見積をご依頼ください。</p>
+    </div>
+
+    <div class="glass-card" style="margin-top:24px;">
+      <div class="section-title">試算結果データ出力</div>
+      
+      <button class="btn-download" onclick="downloadExcel()">📥 Excelファイルでダウンロード（比較表付き）</button>
+      <button class="btn-download ppt" onclick="downloadPPT()">📊 PowerPointファイルでダウンロード（比較表）</button>
+      
+      <div style="margin-top:28px;">
+        <h3 style="font-size:14px;font-weight:700;color:var(--primary);margin-bottom:14px;">月別詳細データ</h3>
+        <div class="table-wrap">
+          <table class="data-table" id="detail_table">
+            <thead>
+              <tr>
+                <th>月</th>
+                <th>使用量(kWh)</th>
+                <th>基本料金(円)</th>
+                <th>電力量料金(円)</th>
+                <th>燃調費(円)</th>
+                <th>国支援(円)</th>
+                <th>再エネ賦課金(円)</th>
+                <th>月額(税込)</th>
+              </tr>
+            </thead>
+            <tbody id="detail_tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUMMER=[6,7,8];
+const RENEWABLE_BY_MONTH=[3.49,3.49,3.49,3.49,3.98,3.98,3.98,3.98,3.98,3.98,3.98,3.98];
+const POWER_FACTOR_DISCOUNT=0.15;
+const CO2_FACTOR=0.000423;
+
+const GOVT_SUPPORT_DEFAULTS={
+  "高圧":[-1.3,-1.3,-0.7,0,0,0,-1.0,-1.2,-1.0,0,0,0],
+  "特別高圧":[0,0,0,0,0,0,0,0,0,0,0,0]
+};
+
+const FUEL_ADJ_BASE={"北海道":{"高圧":[-1.13,-1.2,-1.11,-1,-1.07,-1.28,-1.71,-2.14,-2.48,-2.69,-2.67,-2.59],"特別高圧":[-1.1,-1.17,-1.08,-0.97,-1.04,-1.24,-1.67,-2.09,-2.42,-2.62,-2.6,-2.53]},"東北":{"高圧":[-7.16,-7.16,-7.01,-6.82,-6.94,-7.16,-7.68,-8.06,-8.32,-8.47,-8.47,-8.47],"特別高圧":[-6.94,-6.94,-6.79,-6.61,-6.72,-6.94,-7.43,-7.8,-8.06,-8.21,-8.21,-8.21]},"東京":{"高圧":[-1.27,-1.25,-1.1,-0.87,-0.96,-1.15,-1.64,-1.98,-2.21,-2.35,-2.37,-2.4],"特別高圧":[-1.23,-1.22,-1.06,-0.85,-0.93,-1.12,-1.59,-1.93,-2.15,-2.28,-2.3,-2.33]},"中部":{"高圧":[2.14,2.16,2.35,2.65,2.53,2.33,1.78,1.39,1.14,0.98,0.96,0.9],"特別高圧":[2.1,2.12,2.32,2.61,2.49,2.3,1.76,1.37,1.12,0.97,0.95,0.89]},"北陸":{"高圧":[-6.52,-6.52,-6.41,-6.33,-6.44,-6.66,-7.07,-7.39,-7.63,-7.76,-7.71,-7.66],"特別高圧":[-6.39,-6.39,-6.28,-6.21,-6.31,-6.53,-6.93,-7.25,-7.48,-7.61,-7.56,-7.52]},"関西":{"高圧":[-0.5,-0.48,-0.39,-0.31,-0.38,-0.52,-0.82,-1.03,-1.18,-1.25,-1.24,-1.23],"特別高圧":[-0.49,-0.47,-0.39,-0.3,-0.38,-0.51,-0.81,-1.02,-1.17,-1.24,-1.23,-1.22]},"中国":{"高圧":[-7.4,-7.38,-7.24,-7.13,-7.28,-7.56,-8.1,-8.53,-8.82,-8.98,-8.94,-8.9],"特別高圧":[-7.22,-7.2,-7.06,-6.96,-7.1,-7.38,-7.9,-8.32,-8.6,-8.76,-8.72,-8.68]},"四国":{"高圧":[-6.21,-6.22,-6.13,-6.05,-6.14,-6.34,-6.75,-7.07,-7.32,-7.45,-7.41,-7.36],"特別高圧":[-6.05,-6.06,-5.97,-5.9,-5.99,-6.18,-6.57,-6.89,-7.13,-7.26,-7.22,-7.17]},"九州":{"高圧":[-0.45,-0.44,-0.36,-0.28,-0.35,-0.48,-0.75,-0.95,-1.09,-1.16,-1.14,-1.14],"特別高圧":[-0.44,-0.43,-0.36,-0.28,-0.35,-0.47,-0.74,-0.93,-1.07,-1.13,-1.11,-1.11]}};
+
+const MARKET_ADJ={"北海道":{"高圧":[0.07,0.08,0.11,0.23,0.27,0.14,-0.25,-0.71,-0.93,-0.65,-0.22,-0.03],"特別高圧":[0.07,0.08,0.11,0.22,0.26,0.13,-0.24,-0.69,-0.91,-0.63,-0.22,-0.03]},"東北":{"高圧":[-1.15,-1.17,-1.29,-1.32,-1.3,-1.36,-1.57,-1.8,-1.83,-1.67,-1.49,-1.47],"特別高圧":[-1.12,-1.14,-1.25,-1.28,-1.26,-1.33,-1.53,-1.75,-1.78,-1.63,-1.45,-1.43]},"東京":{"高圧":[1.1475,0.9605,0.8813,0.8369,0.6911,0.4121,0.0063,-0.0285,0.2631,0.5833,0.7513,0.5674],"特別高圧":[1.1186,0.9363,0.859,0.8158,0.6736,0.4017,0.0062,-0.0278,0.2565,0.5686,0.7323,0.5531],"高圧ベーシック":[0.73,0.94,0.08,-0.04,-0.08,0.52,0.81,0.6,0.53,0.55,0.12,-0.05],"特別高圧ベーシック":[0.71,0.91,0.07,-0.04,-0.08,0.51,0.78,0.58,0.51,0.53,0.12,-0.05]},"中部":{"高圧":[-0.55,-0.65,-0.71,-0.67,-0.62,-0.68,-0.86,-1.09,-1.12,-0.92,-0.72,-0.67],"特別高圧":[-0.54,-0.64,-0.7,-0.66,-0.6,-0.67,-0.84,-1.07,-1.1,-0.9,-0.71,-0.66]},"北陸":{"高圧":[0,0,0,-0.07,-0.22,0,0,0,0,0,0,0],"特別高圧":[0,0,0,-0.07,-0.21,0,0,0,0,0,0,0]},"関西":{"高圧":[0.58,0.21,0.09,0.15,0.39,0.39,0.14,-0.5,-0.61,-0.15,0.27,0.34],"特別高圧":[0.57,0.2,0.09,0.15,0.38,0.39,0.14,-0.49,-0.6,-0.14,0.27,0.33]},"中国":{"高圧":[-1.37,-1.62,-1.68,-1.67,-1.56,-1.61,-1.8,-2.17,-2.31,-2.15,-1.95,-1.84],"特別高圧":[-1.34,-1.58,-1.63,-1.63,-1.52,-1.57,-1.76,-2.11,-2.25,-2.1,-1.9,-1.79]},"四国":{"高圧":[0,0,0,0,0,0,0,0,0,0,0,0],"特別高圧":[0,0,0,0,0,0,0,0,0,0,0,0]},"九州":{"高圧":[0,0,0,0,0,0,0,0,0,0,0,0],"特別高圧":[0,0,0,0,0,0,0,0,0,0,0,0]}};
+
+const AREA_NAMES={hokkaido:'北海道電力',tohoku:'東北電力',tepco:'東京電力',chubu:'中部電力',hokuriku:'北陸電力',kepco:'関西電力',chugoku:'中国電力',shikoku:'四国電力',kyushu:'九州電力'};
+
+const PLANS_BY_AREA={"北海道":[{"voltage":"高圧","name":"高圧業務用電力","key":"北海道高圧高圧業務用電力","basicPerKw":2693.2,"summerRate":23.4,"otherRate":23.4},{"voltage":"特別高圧","name":"特別高圧業務用電力A(30kV)","key":"北海道特別高圧特別高圧業務用電力A(30kV)","basicPerKw":2630.5,"summerRate":21.02,"otherRate":21.02},{"voltage":"特別高圧","name":"特別高圧業務用電力A(60kV)","key":"北海道特別高圧特別高圧業務用電力A(60kV)","basicPerKw":2619.5,"summerRate":20.98,"otherRate":20.98},{"voltage":"特別高圧","name":"特別高圧産業用電力A(30kV)","key":"北海道特別高圧特別高圧産業用電力A(30kV)","basicPerKw":2696.5,"summerRate":20.07,"otherRate":20.07},{"voltage":"特別高圧","name":"特別高圧産業用電力A(60kV)","key":"北海道特別高圧特別高圧産業用電力A(60kV)","basicPerKw":2685.5,"summerRate":20.03,"otherRate":20.03},{"voltage":"高圧","name":"高圧産業用電力一般","key":"北海道高圧高圧産業用電力一般","basicPerKw":2880.2,"summerRate":21.62,"otherRate":21.62},{"voltage":"高圧","name":"高圧産業用電力Ⅰ型","key":"北海道高圧高圧産業用電力Ⅰ型","basicPerKw":2264.2,"summerRate":23.16,"otherRate":23.16},{"voltage":"高圧","name":"高圧産業用電力Ⅱ型","key":"北海道高圧高圧産業用電力Ⅱ型","basicPerKw":2550.2,"summerRate":22.33,"otherRate":22.33},{"voltage":"高圧","name":"高圧産業用電力Ⅲ型","key":"北海道高圧高圧産業用電力Ⅲ型","basicPerKw":3287.2,"summerRate":20.55,"otherRate":20.55}],"東北":[{"voltage":"特別高圧","name":"特別高圧電力A 30kV","key":"東北特別高圧特別高圧電力A 30kV","basicPerKw":1996.5,"summerRate":29.23,"otherRate":28.21},{"voltage":"特別高圧","name":"特別高圧電力A 60kV","key":"東北特別高圧特別高圧電力A 60kV","basicPerKw":1974.5,"summerRate":28.87,"otherRate":27.88},{"voltage":"特別高圧","name":"特別高圧電⼒B 30kV","key":"東北特別高圧特別高圧電⼒B 30kV","basicPerKw":2172.5,"summerRate":28.32,"otherRate":27.38},{"voltage":"特別高圧","name":"特別高圧電⼒B 60kV","key":"東北特別高圧特別高圧電⼒B 60kV","basicPerKw":2106.5,"summerRate":28.32,"otherRate":27.38},{"voltage":"特別高圧","name":"特別高圧電⼒B 140kV","key":"東北特別高圧特別高圧電⼒B 140kV","basicPerKw":2040.5,"summerRate":27.59,"otherRate":26.72},{"voltage":"高圧","name":"業務用電力","key":"東北高圧業務用電力","basicPerKw":2053.7,"summerRate":31.74,"otherRate":30.54},{"voltage":"高圧","name":"高圧電⼒","key":"東北高圧高圧電⼒","basicPerKw":2372.7,"summerRate":29.66,"otherRate":28.67},{"voltage":"高圧","name":"高圧電⼒Ｓ","key":"東北高圧高圧電⼒Ｓ","basicPerKw":1712.7,"summerRate":31.3,"otherRate":30.16}],"東京":[{"voltage":"高圧","name":"ベーシックプラン","key":"東京高圧ベーシックプラン","basicPerKw":1890.0,"summerRate":19.51,"otherRate":19.51},{"voltage":"高圧","name":"業務用電力","key":"東京高圧業務用電力","basicPerKw":1890.0,"summerRate":20.32,"otherRate":19.16},{"voltage":"高圧","name":"高圧電力A","key":"東京高圧高圧電力A","basicPerKw":1466.5,"summerRate":20.15,"otherRate":19.02},{"voltage":"高圧","name":"高圧電力","key":"東京高圧高圧電力","basicPerKw":1989.0,"summerRate":18.94,"otherRate":17.93},{"voltage":"特別高圧","name":"ベーシックプラン","key":"東京特別高圧ベーシックプラン","basicPerKw":1770.0,"summerRate":18.14,"otherRate":18.14},{"voltage":"特別高圧","name":"特別高圧電力A(20kV)","key":"東京特別高圧特別高圧電力A(20kV)","basicPerKw":1770.0,"summerRate":18.85,"otherRate":17.84},{"voltage":"特別高圧","name":"特別高圧電力A(60kV)","key":"東京特別高圧特別高圧電力A(60kV)","basicPerKw":1715.0,"summerRate":18.59,"otherRate":17.63},{"voltage":"特別高圧","name":"特別高圧電力B(20kV)","key":"東京特別高圧特別高圧電力B(20kV)","basicPerKw":1770.0,"summerRate":18.29,"otherRate":17.34},{"voltage":"特別高圧","name":"特別高圧電力B(60kV)","key":"東京特別高圧特別高圧電力B(60kV)","basicPerKw":1715.0,"summerRate":18.04,"otherRate":17.12},{"voltage":"特別高圧","name":"特別高圧電力B(140kV)","key":"東京特別高圧特別高圧電力B(140kV)","basicPerKw":1660.0,"summerRate":17.8,"otherRate":16.9}],"中部":[{"voltage":"高圧","name":"高圧業務用電力 FRプランA","key":"中部高圧高圧業務用電力 FRプランA","basicPerKw":1716.26,"summerRate":20.74,"otherRate":19.65},{"voltage":"高圧","name":"高圧業務用電力 FRプランB","key":"中部高圧高圧業務用電力 FRプランB","basicPerKw":1914.26,"summerRate":19.62,"otherRate":18.63},{"voltage":"高圧","name":"高圧業務用電力 FRプランC","key":"中部高圧高圧業務用電力 FRプランC","basicPerKw":2002.26,"summerRate":19.41,"otherRate":18.44},{"voltage":"高圧","name":"高圧電力(500kW未満)第2種プランL","key":"中部高圧高圧電力(500kW未満)第2種プランL","basicPerKw":1352.74,"summerRate":21.68,"otherRate":20.48},{"voltage":"高圧","name":"高圧電力(500kW未満)第2種プランH","key":"中部高圧高圧電力(500kW未満)第2種プランH","basicPerKw":1738.26,"summerRate":19.75,"otherRate":18.75},{"voltage":"高圧","name":"高圧電力(500kW以上)第2種プランA","key":"中部高圧高圧電力(500kW以上)第2種プランA","basicPerKw":1738.26,"summerRate":19.75,"otherRate":18.75},{"voltage":"高圧","name":"高圧電力(500kW以上)第2種プランB","key":"中部高圧高圧電力(500kW以上)第2種プランB","basicPerKw":1936.26,"summerRate":18.86,"otherRate":17.92},{"voltage":"特別高圧","name":"特別高圧業務用電力　第2種(20kV/30kV)プランA","key":"中部特別高圧特別高圧業務用電力　第2種(20kV/30kV)プランA","basicPerKw":1667.81,"summerRate":19.13,"otherRate":18.15},{"voltage":"特別高圧","name":"特別高圧業務用電力　第2種(20kV/30kV)プランB","key":"中部特別高圧特別高圧業務用電力　第2種(20kV/30kV)プランB","basicPerKw":1788.28,"summerRate":18.44,"otherRate":17.53},{"voltage":"特別高圧","name":"特別高圧業務用電力　第2種(20kV/30kV)プランC","key":"中部特別高圧特別高圧業務用電力　第2種(20kV/30kV)プランC","basicPerKw":1942.28,"summerRate":18.0,"otherRate":17.13},{"voltage":"特別高圧","name":"特別高圧業務用電力　第2種(70kV)プランA","key":"中部特別高圧特別高圧業務用電力　第2種(70kV)プランA","basicPerKw":1625.9,"summerRate":18.97,"otherRate":18.01},{"voltage":"特別高圧","name":"特別高圧業務用電力　第2種(70kV)プランB","key":"中部特別高圧特別高圧業務用電力　第2種(70kV)プランB","basicPerKw":1746.38,"summerRate":18.28,"otherRate":17.39},{"voltage":"特別高圧","name":"特別高圧業務用電力　第2種(70kV)プランC","key":"中部特別高圧特別高圧業務用電力　第2種(70kV)プランC","basicPerKw":1900.38,"summerRate":17.85,"otherRate":16.98},{"voltage":"特別高圧","name":"特別高圧電力　第2種(20kV/30kV)プランA","key":"中部特別高圧特別高圧電力　第2種(20kV/30kV)プランA","basicPerKw":1679.33,"summerRate":18.85,"otherRate":17.9},{"voltage":"特別高圧","name":"特別高圧電力　第2種(20kV/30kV)プランB","key":"中部特別高圧特別高圧電力　第2種(20kV/30kV)プランB","basicPerKw":1877.33,"summerRate":17.9,"otherRate":17.03},{"voltage":"特別高圧","name":"特別高圧電力　第2種(70kV)プランA","key":"中部特別高圧特別高圧電力　第2種(70kV)プランA","basicPerKw":1637.43,"summerRate":18.63,"otherRate":17.69},{"voltage":"特別高圧","name":"特別高圧電力　第2種(70kV)プランB","key":"中部特別高圧特別高圧電力　第2種(70kV)プランB","basicPerKw":1835.43,"summerRate":17.67,"otherRate":16.83},{"voltage":"特別高圧","name":"特別高圧電力　第2種(140kV)プランA","key":"中部特別高圧特別高圧電力　第2種(140kV)プランA","basicPerKw":1595.52,"summerRate":18.41,"otherRate":17.49},{"voltage":"特別高圧","name":"特別高圧電力　第2種(140kV)プランB","key":"中部特別高圧特別高圧電力　第2種(140kV)プランB","basicPerKw":1793.52,"summerRate":17.33,"otherRate":16.51}],"北陸":[{"voltage":"高圧","name":"業務用電力","key":"北陸高圧業務用電力","basicPerKw":2151.0,"summerRate":27.25,"otherRate":27.25},{"voltage":"高圧","name":"高圧電力A","key":"北陸高圧高圧電力A","basicPerKw":1876.0,"summerRate":27.53,"otherRate":27.53},{"voltage":"高圧","name":"高圧電力B","key":"北陸高圧高圧電力B","basicPerKw":2151.0,"summerRate":26.34,"otherRate":26.34},{"voltage":"特別高圧","name":"業務用特別高圧電力","key":"北陸特別高圧業務用特別高圧電力","basicPerKw":2090.5,"summerRate":25.95,"otherRate":25.95},{"voltage":"特別高圧","name":"特別高圧電力","key":"北陸特別高圧特別高圧電力","basicPerKw":2090.5,"summerRate":25.41,"otherRate":25.41}],"関西":[{"voltage":"高圧","name":"高圧電力AS","key":"関西高圧高圧電力AS","basicPerKw":1911.8,"summerRate":18.07,"otherRate":17.0},{"voltage":"高圧","name":"高圧電力BS","key":"関西高圧高圧電力BS","basicPerKw":2043.8,"summerRate":16.68,"otherRate":15.73},{"voltage":"高圧","name":"高圧電力AL","key":"関西高圧高圧電力AL","basicPerKw":1911.8,"summerRate":18.07,"otherRate":17.0},{"voltage":"高圧","name":"高圧電力BL","key":"関西高圧高圧電力BL","basicPerKw":2043.8,"summerRate":16.68,"otherRate":15.73},{"voltage":"特別高圧","name":"特別高圧電力A(20kV/30kV)","key":"関西特別高圧特別高圧電力A(20kV/30kV)","basicPerKw":1754.5,"summerRate":16.55,"otherRate":15.58},{"voltage":"特別高圧","name":"特別高圧電力A(70kV)","key":"関西特別高圧特別高圧電力A(70kV)","basicPerKw":1710.5,"summerRate":16.3,"otherRate":15.36},{"voltage":"特別高圧","name":"特別高圧電力B(20kV/30kV)","key":"関西特別高圧特別高圧電力B(20kV/30kV)","basicPerKw":1886.5,"summerRate":15.66,"otherRate":14.79},{"voltage":"特別高圧","name":"特別高圧電力B(70kV)","key":"関西特別高圧特別高圧電力B(70kV)","basicPerKw":1842.5,"summerRate":15.34,"otherRate":14.48}],"中国":[{"voltage":"高圧","name":"業務用電力","key":"中国高圧業務用電力","basicPerKw":1996.5,"summerRate":31.32,"otherRate":29.88},{"voltage":"特別高圧","name":"特別高圧電力A(20kV)","key":"中国特別高圧特別高圧電力A(20kV)","basicPerKw":1842.5,"summerRate":28.01,"otherRate":26.81},{"voltage":"特別高圧","name":"特別高圧電力A(60kV)","key":"中国特別高圧特別高圧電力A(60kV)","basicPerKw":1826.0,"summerRate":27.9,"otherRate":26.72},{"voltage":"高圧","name":"高圧電力A","key":"中国高圧高圧電力A","basicPerKw":1507.0,"summerRate":31.89,"otherRate":30.4},{"voltage":"高圧","name":"高圧電力B","key":"中国高圧高圧電力B","basicPerKw":1996.5,"summerRate":29.73,"otherRate":28.43},{"voltage":"特別高圧","name":"特別高圧電力B(20kV)","key":"中国特別高圧特別高圧電力B(20kV)","basicPerKw":1842.5,"summerRate":27.29,"otherRate":26.17},{"voltage":"特別高圧","name":"特別高圧電力B(60kV)","key":"中国特別高圧特別高圧電力B(60kV)","basicPerKw":1826.0,"summerRate":27.17,"otherRate":26.06},{"voltage":"特別高圧","name":"特別高圧電力B(100kV)","key":"中国特別高圧特別高圧電力B(100kV)","basicPerKw":1793.0,"summerRate":26.99,"otherRate":25.89}],"四国":[{"voltage":"高圧","name":"業務用電力(500kW未満)","key":"四国高圧業務用電力(500kW未満)","basicPerKw":1665.08,"summerRate":28.66,"otherRate":27.48},{"voltage":"高圧","name":"業務用電力(500kW以上)","key":"四国高圧業務用電力(500kW以上)","basicPerKw":1665.08,"summerRate":28.66,"otherRate":27.48},{"voltage":"特別高圧","name":"特別高圧電力A(20kV)","key":"四国特別高圧特別高圧電力A(20kV)","basicPerKw":1747.85,"summerRate":25.95,"otherRate":24.95},{"voltage":"特別高圧","name":"特別高圧電力A(60kV)","key":"四国特別高圧特別高圧電力A(60kV)","basicPerKw":1715.37,"summerRate":25.74,"otherRate":24.77},{"voltage":"高圧","name":"高圧電力A","key":"四国高圧高圧電力A","basicPerKw":1412.61,"summerRate":29.76,"otherRate":28.47},{"voltage":"高圧","name":"高圧電力B","key":"四国高圧高圧電力B","basicPerKw":1935.37,"summerRate":26.82,"otherRate":25.77},{"voltage":"特別高圧","name":"特別高圧電力B(20kV)","key":"四国特別高圧特別高圧電力B(20kV)","basicPerKw":1791.85,"summerRate":25.28,"otherRate":24.35},{"voltage":"特別高圧","name":"特別高圧電力B(60kV)","key":"四国特別高圧特別高圧電力B(60kV)","basicPerKw":1759.37,"summerRate":25.08,"otherRate":24.16}],"九州":[{"voltage":"高圧","name":"業務用電力A(6kV)","key":"九州高圧業務用電力A(6kV)","basicPerKw":2142.78,"summerRate":15.85,"otherRate":14.92},{"voltage":"特別高圧","name":"業務用電力A(20kV)","key":"九州特別高圧業務用電力A(20kV)","basicPerKw":1983.55,"summerRate":14.49,"otherRate":13.66},{"voltage":"特別高圧","name":"業務用電力A(60kV)","key":"九州特別高圧業務用電力A(60kV)","basicPerKw":1917.55,"summerRate":14.38,"otherRate":13.56},{"voltage":"高圧","name":"産業用電力A(6kV)","key":"九州高圧産業用電力A(6kV)","basicPerKw":2142.78,"summerRate":15.37,"otherRate":14.48},{"voltage":"特別高圧","name":"産業用電力A(20kV)","key":"九州特別高圧産業用電力A(20kV)","basicPerKw":1983.55,"summerRate":14.1,"otherRate":13.29},{"voltage":"特別高圧","name":"産業用電力A(60kV)","key":"九州特別高圧産業用電力A(60kV)","basicPerKw":1917.55,"summerRate":13.99,"otherRate":13.2},{"voltage":"特別高圧","name":"産業用電力A(100kV)","key":"九州特別高圧産業用電力A(100kV)","basicPerKw":1851.55,"summerRate":13.89,"otherRate":13.1},{"voltage":"特別高圧","name":"産業用電力A(200kV)","key":"九州特別高圧産業用電力A(200kV)","basicPerKw":1785.55,"summerRate":13.76,"otherRate":13.0},{"voltage":"高圧","name":"業務用電力A-I","key":"九州高圧業務用電力A-I","basicPerKw":1416.78,"summerRate":21.46,"otherRate":20.01},{"voltage":"高圧","name":"産業用電力A-I","key":"九州高圧産業用電力A-I","basicPerKw":1471.78,"summerRate":18.86,"otherRate":17.64}]};
+
+const AREA_MAPPING={hokkaido:'北海道',tohoku:'東北',tepco:'東京',chubu:'中部',hokuriku:'北陸',kepco:'関西',chugoku:'中国',shikoku:'四国',kyushu:'九州'};
+
+const JEPX_PRICES=[20.5,19.2,17.8,16.4,15.8,17.2,21.3,22.8,20.1,17.6,18.9,21.6];
+const JEPX_FEE=3.0;
+const REGIL_BASIC=1700;
+const MARUBENI_BASIC=1716.26;
+const MARUBENI_SUMMER=20.74;
+const MARUBENI_OTHER=19.65;
+
+let currentTab='marubeni';
+let kwhs_global=[];
+let lastAnnual=0;
+let currentPlanData=null;
+let currentInputMode='manual';
+let monthlyDetails=[];
+let calculationData={};
+
+const MONTHS=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+function switchInputMode(mode){
+  currentInputMode=mode;
+  document.querySelectorAll('.input-mode-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[onclick="switchInputMode('${mode}')"]`).classList.add('active');
+  
+  document.getElementById('quick-input-container').classList.toggle('active',mode==='quick');
+  document.getElementById('preset-container').style.display=mode==='preset'?'grid':'none';
+}
+
+function quickDistribute(){
+  const total=Number(document.getElementById('quick_total').value)||0;
+  const summerIncrease=Number(document.getElementById('quick_summer').value)||15;
+  const inputs=document.querySelectorAll('.monthly-input');
+  
+  const avgMonth=total/12;
+  const summerMult=1+(summerIncrease/100);
+  const otherMult=(12-(3*summerMult))/(12-3);
+  
+  inputs.forEach((inp,i)=>{
+    const val=SUMMER.includes(i)?Math.round(avgMonth*summerMult):Math.round(avgMonth*otherMult);
+    inp.value=val;
+  });
+  updateTotal();
+}
+
+function applyPreset(type){
+  const inputs=document.querySelectorAll('.monthly-input');
+  const patterns={
+    flat:[83,83,83,83,83,83,83,83,83,83,83,84],
+    summer:[70,68,72,75,78,82,95,98,90,80,75,72],
+    winter:[92,95,88,75,70,68,80,85,78,72,82,90],
+    office:[85,78,72,65,60,68,92,98,82,70,75,82]
+  };
+  const pattern=patterns[type]||patterns.flat;
+  inputs.forEach((inp,i)=>inp.value=pattern[i]*1000);
+  updateTotal();
+}
+
+function updatePlans(areaCode){
+  const areaName=AREA_MAPPING[areaCode];
+  const plans=PLANS_BY_AREA[areaName];
+  const planSelect=document.getElementById('plan');
+  planSelect.innerHTML=plans.map((p,i)=>`<option value="${i}">[${p.voltage}] ${p.name} - 基本${p.basicPerKw}円/kW・夏季${p.summerRate}円/kWh・その他${p.otherRate}円/kWh</option>`).join('');
+  showPlanDetails();
+}
+
+function getCurrentPlan(){
+  const areaCode=document.getElementById('area').value;
+  const areaName=AREA_MAPPING[areaCode];
+  const planIdx=parseInt(document.getElementById('plan').value)||0;
+  return PLANS_BY_AREA[areaName][planIdx];
+}
+
+function showPlanDetails(){
+  const planData=getCurrentPlan();
+  document.getElementById('plan_details').classList.add('active');
+  document.getElementById('plan_basic_rate').textContent=planData.basicPerKw.toFixed(2)+' 円/kW';
+  document.getElementById('plan_summer_rate').textContent=planData.summerRate.toFixed(2)+' 円/kWh';
+  document.getElementById('plan_other_rate').textContent=planData.otherRate.toFixed(2)+' 円/kWh';
+  document.getElementById('plan_basic_discounted').textContent=(planData.basicPerKw*0.85).toFixed(2)+' 円/kW';
+}
+
+function onPlanChange(){
+  const areaCode=document.getElementById('area').value;
+  buildFuelGrid(areaCode);
+  showPlanDetails();
+}
+
+function getFuelForPlan(areaName,planName,voltage){
+  const fuelBase=FUEL_ADJ_BASE[areaName]&&FUEL_ADJ_BASE[areaName][voltage]?FUEL_ADJ_BASE[areaName][voltage]:new Array(12).fill(0);
+  let marketKey=voltage;
+  if(areaName==='東京'&&planName.includes('ベーシック')){
+    marketKey=voltage==='高圧'?'高圧ベーシック':'特別高圧ベーシック';
+  }
+  const marketAdj=MARKET_ADJ[areaName]&&MARKET_ADJ[areaName][marketKey]?MARKET_ADJ[areaName][marketKey]:new Array(12).fill(0);
+  return fuelBase.map((f,i)=>f+marketAdj[i]);
+}
+
+function buildFuelGrid(areaCode){
+  const areaName=AREA_MAPPING[areaCode];
+  const planData=getCurrentPlan();
+  const vals=getFuelForPlan(areaName,planData.name,planData.voltage);
+  
+  document.getElementById('fuel_note').innerHTML=`<strong>📍 ${AREA_NAMES[areaCode]}エリア・${planData.voltage}</strong>　2025年1〜12月の小売事業者公表単価（市場調整含む）を反映しています。`;
+  const grid=document.getElementById('fuel_grid');
+  grid.innerHTML=vals.map((v,i)=>{
+    return `<div class="fuel-cell">
+      <label>${MONTHS[i]}</label>
+      <input type="number" class="fuel-input" value="${v.toFixed(2)}" step="0.01" min="-20" max="30" readonly style="opacity:0.8;cursor:not-allowed;">
+    </div>`;
+  }).join('');
+  
+  const supportDefaults=GOVT_SUPPORT_DEFAULTS[planData.voltage]||[0,0,0,0,0,0,0,0,0,0,0,0];
+  const supportGrid=document.getElementById('support_grid');
+  supportGrid.innerHTML=MONTHS.map((m,i)=>{
+    return `<div class="support-cell">
+      <label>${m}</label>
+      <input type="number" class="support-input" value="${supportDefaults[i]}" step="0.01" min="-50" max="0">
+    </div>`;
+  }).join('');
+}
+
+function onAreaChange(){
+  const areaCode=document.getElementById('area').value;
+  updatePlans(areaCode);
+  buildFuelGrid(areaCode);
+  updateTotal();
+}
+
+function updateTotal(){
+  let t=0;
+  document.querySelectorAll('.monthly-input').forEach(i=>t+=Number(i.value)||0);
+  document.getElementById('total_kwh_display').textContent=t.toLocaleString()+' kWh';
+}
+document.querySelectorAll('.monthly-input').forEach(el=>el.addEventListener('input',updateTotal));
+
+function getFuel(){
+  return Array.from(document.querySelectorAll('.fuel-input')).map(i=>Number(i.value)||0);
+}
+
+function getSupport(){
+  return Array.from(document.querySelectorAll('.support-input')).map(i=>Number(i.value)||0);
+}
+
+function calcBill(kwh,mi,planData,kw,fuels,supports,addDiscount){
+  const rate=SUMMER.includes(mi)?planData.summerRate:planData.otherRate;
+  const discountedRate=rate-addDiscount;
+  const basicBeforeDiscount=planData.basicPerKw*kw;
+  const basicAfterPF=basicBeforeDiscount*0.85;
+  
+  const taxableSum=basicAfterPF+kwh*discountedRate+kwh*fuels[mi];
+  const taxed=Math.floor(taxableSum*1.1);
+  
+  const governmentSupport=Math.floor(kwh*supports[mi]);
+  const renewable=Math.floor(kwh*RENEWABLE_BY_MONTH[mi]);
+  
+  return taxed+governmentSupport+renewable;
+}
+
+function calcAnnual(kwhs,planData,kw,fuels,supports,addDiscount){
+  return kwhs.reduce((s,kwh,i)=>s+calcBill(kwh,i,planData,kw,fuels,supports,addDiscount),0);
+}
+
+function calcJEPXAnnual(kwhs,planData,kw,fuels,supports,addDiscount){
+  const basicBeforeDiscount=planData.basicPerKw*kw*12;
+  const basicAfterPF=basicBeforeDiscount*0.85;
+  const basicAnn=Math.floor(basicAfterPF*1.1);
+  
+  const energyAnn=kwhs.reduce((s,kwh,i)=>{
+    const jepxRate=JEPX_PRICES[i]+JEPX_FEE;
+    const taxableSum=(kwh*jepxRate+kwh*fuels[i]);
+    const taxed=Math.floor(taxableSum*1.1);
+    const governmentSupport=Math.floor(kwh*supports[i]);
+    const renewable=Math.floor(kwh*RENEWABLE_BY_MONTH[i]);
+    return s+taxed+governmentSupport+renewable;
+  },0);
+  return basicAnn+energyAnn;
+}
+
+function getEnergyOnly(kwhs,planData,fuels,supports,addDiscount){
+  return kwhs.reduce((s,kwh,i)=>{
+    const rate=SUMMER.includes(i)?planData.summerRate:planData.otherRate;
+    const discountedRate=rate-addDiscount;
+    const taxableSum=(discountedRate+fuels[i])*kwh;
+    const taxed=Math.floor(taxableSum*1.1);
+    const governmentSupport=Math.floor(kwh*supports[i]);
+    const renewable=Math.floor(kwh*RENEWABLE_BY_MONTH[i]);
+    return s+taxed+governmentSupport+renewable;
+  },0);
+}
+
+function calcRegilAnnual(kwhs,planData,kw,fuels,supports,addDiscount){
+  const basicBeforeDiscount=REGIL_BASIC*kw*12;
+  const basicAfterPF=basicBeforeDiscount*0.85;
+  const basicAnn=Math.floor(basicAfterPF*1.1);
+  
+  const energyAnn=kwhs.reduce((s,kwh,i)=>{
+    const rate=SUMMER.includes(i)?planData.summerRate:planData.otherRate;
+    const discountedRate=rate-addDiscount;
+    const taxableSum=(kwh*discountedRate+kwh*fuels[i]);
+    const taxed=Math.floor(taxableSum*1.1);
+    const governmentSupport=Math.floor(kwh*supports[i]);
+    const renewable=Math.floor(kwh*RENEWABLE_BY_MONTH[i]);
+    return s+taxed+governmentSupport+renewable;
+  },0);
+  return basicAnn+energyAnn;
+}
+
+function calcMarubeniAnnual(kwhs,kw,fuels,supports,addDiscount){
+  const basicBeforeDiscount=MARUBENI_BASIC*kw*12;
+  const basicAfterPF=basicBeforeDiscount*0.85;
+  const basicAnn=Math.floor(basicAfterPF*1.1);
+  
+  const energyAnn=kwhs.reduce((s,kwh,i)=>{
+    const rate=SUMMER.includes(i)?MARUBENI_SUMMER:MARUBENI_OTHER;
+    const discountedRate=rate-addDiscount;
+    const taxableSum=(kwh*discountedRate+kwh*fuels[i]);
+    const taxed=Math.floor(taxableSum*1.1);
+    const governmentSupport=Math.floor(kwh*supports[i]);
+    const renewable=Math.floor(kwh*RENEWABLE_BY_MONTH[i]);
+    return s+taxed+governmentSupport+renewable;
+  },0);
+  return basicAnn+energyAnn;
+}
+
+function fmt(n){return Math.floor(n).toLocaleString();}
+
+function switchTab(btn,tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  currentTab=tab;
+  if(lastAnnual)renderProviders(lastAnnual,kwhs_global);
+}
+
+function calculate(){
+  const areaCode=document.getElementById('area').value;
+  const areaName=AREA_MAPPING[areaCode];
+  const kw=Number(document.getElementById('contract_kw').value)||100;
+  const addDiscount=Number(document.getElementById('additional_discount').value)||0;
+  const kwhs=Array.from(document.querySelectorAll('.monthly-input')).map(i=>Number(i.value)||0);
+  kwhs_global=kwhs;
+  const totalKwh=kwhs.reduce((a,b)=>a+b,0);
+  const planData=getCurrentPlan();
+  currentPlanData=planData;
+  const fuels=getFuelForPlan(areaName,planData.name,planData.voltage);
+  const supports=getSupport();
+  
+  const bills=kwhs.map((kwh,i)=>calcBill(kwh,i,planData,kw,fuels,supports,addDiscount));
+  const annual=bills.reduce((a,b)=>a+b,0);
+  lastAnnual=annual;
+
+  const co2=totalKwh*CO2_FACTOR;
+
+  const basicAnnRaw=Math.floor(planData.basicPerKw*kw*12*0.85*1.1);
+  const energyAnn=kwhs.map((kwh,i)=>{
+    const rate=SUMMER.includes(i)?planData.summerRate:planData.otherRate;
+    const discountedRate=rate-addDiscount;
+    return Math.floor(kwh*discountedRate*1.1);
+  }).reduce((a,b)=>a+b,0);
+  const fuelAnn=kwhs.map((kwh,i)=>Math.floor(kwh*fuels[i]*1.1)).reduce((a,b)=>a+b,0);
+  const supportAnn=kwhs.map((kwh,i)=>Math.floor(kwh*supports[i])).reduce((a,b)=>a+b,0);
+  const reAnn=kwhs.map((kwh,i)=>Math.floor(kwh*RENEWABLE_BY_MONTH[i])).reduce((a,b)=>a+b,0);
+
+  calculationData={
+    areaName:AREA_NAMES[areaCode],
+    planName:planData.name,
+    kw,
+    totalKwh,
+    co2,
+    annual,
+    basicAnn:basicAnnRaw,
+    energyAnn,
+    fuelAnn,
+    supportAnn,
+    reAnn,
+    basicPerKw:planData.basicPerKw,
+    summerRate:planData.summerRate,
+    otherRate:planData.otherRate,
+    addDiscount
+  };
+
+  monthlyDetails=kwhs.map((kwh,i)=>{
+    const rate=SUMMER.includes(i)?planData.summerRate:planData.otherRate;
+    const discountedRate=rate-addDiscount;
+    const basicMonthlyRaw=planData.basicPerKw*kw*0.85;
+    const basicMonthly=Math.floor(basicMonthlyRaw*1.1);
+    const energy=Math.floor(kwh*discountedRate*1.1);
+    const fuel=Math.floor(kwh*fuels[i]*1.1);
+    const support=Math.floor(kwh*supports[i]);
+    const re=Math.floor(kwh*RENEWABLE_BY_MONTH[i]);
+    return {month:MONTHS[i],kwh,basic:basicMonthly,energy,fuel,support,re,total:bills[i]};
+  });
+
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+
+  document.getElementById('summary_label').textContent=`${AREA_NAMES[areaCode]}・${planData.name}（契約${fmt(kw)}kW・力率100%）年間電気料金推計`;
+  document.getElementById('annual_total').textContent=fmt(annual)+'円';
+  document.getElementById('monthly_avg_display').textContent=`月平均 ${fmt(annual/12)} 円　年間使用量 ${fmt(totalKwh)} kWh`;
+  document.getElementById('co2_amount').textContent=`${co2.toFixed(2)} t-CO2`;
+
+  const avgFuel=(fuels.reduce((a,b)=>a+b,0)/12).toFixed(2);
+  const avgSupport=(supports.reduce((a,b)=>a+b,0)/12).toFixed(2);
+  const avgRenewable=(RENEWABLE_BY_MONTH.reduce((a,b)=>a+b,0)/12).toFixed(2);
+  
+  let discountText=addDiscount>0?`力率100%割引15%・従量料金値引き${addDiscount}円/kWh適用後`:'力率100%割引15%適用後';
+  
+  document.getElementById('breakdown_list').innerHTML=`
+    <li class="breakdown-item">
+      <div>
+        <div class="breakdown-key">基本料金（${fmt(kw)}kW × ${fmt(planData.basicPerKw)}円/kW × 12・${discountText}）</div>
+        <div class="breakdown-sub">※容量拠出金は単価に含まれています</div>
+      </div>
+      <span class="breakdown-val">${fmt(basicAnnRaw)}円</span>
+    </li>
+    <li class="breakdown-item">
+      <div>
+        <div class="breakdown-key">電力量料金（夏季${planData.summerRate}円・その他${planData.otherRate}円/kWh${addDiscount>0?` - ${addDiscount}円/kWh値引き`:''}）</div>
+      </div>
+      <span class="breakdown-val">${fmt(energyAnn)}円</span>
+    </li>
+    <li class="breakdown-item">
+      <div>
+        <div class="breakdown-key">燃料費調整額（平均${avgFuel}円/kWh）</div>
+        <div class="breakdown-sub">※市場調整含む</div>
+      </div>
+      <span class="breakdown-val" style="color:${fuelAnn>=0?'var(--text)':'var(--success)'};">${fuelAnn>=0?'+':''}${fmt(fuelAnn)}円</span>
+    </li>
+    ${supportAnn!==0?`<li class="breakdown-item">
+      <div>
+        <div class="breakdown-key">国による支援等（平均${avgSupport}円/kWh・税込）</div>
+        <div class="breakdown-sub">※激変緩和措置など・非課税</div>
+      </div>
+      <span class="breakdown-val" style="color:var(--success);">${fmt(supportAnn)}円</span>
+    </li>`:''}
+    <li class="breakdown-item">
+      <div>
+        <div class="breakdown-key">再エネ賦課金（平均${avgRenewable}円/kWh × ${fmt(totalKwh)}kWh）</div>
+        <div class="breakdown-sub">※非課税・年度別適用</div>
+      </div>
+      <span class="breakdown-val">${fmt(reAnn)}円</span>
+    </li>
+  `;
+  document.getElementById('breakdown_total_val').textContent=fmt(annual)+'円';
+
+  const arr1=kw*100*12;
+  const arr2=totalKwh*0.6;
+  const arrMin=Math.min(arr1,arr2);
+  const arrMax=Math.max(arr1,arr2);
+  document.getElementById('arr_amount').textContent=`${fmt(arrMin)}円 〜 ${fmt(arrMax)}円`;
+  document.getElementById('arr_sub').textContent=`kW基準: ${fmt(arr1)}円 / kWh基準: ${fmt(arr2)}円`;
+
+  document.getElementById('tier_info').innerHTML=`
+    <strong style="color:var(--accent)">夏季（7〜9月）</strong> ${planData.summerRate}円/kWh${addDiscount>0?` - ${addDiscount}円/kWh`:''}　
+    <strong style="color:var(--primary)">その他季</strong> ${planData.otherRate}円/kWh${addDiscount>0?` - ${addDiscount}円/kWh`:''}　
+    <strong style="color:var(--text-dim)">基本料金</strong> ${fmt(planData.basicPerKw)}円/kW・月（力率100%で15%割引適用後 ${fmt(planData.basicPerKw*0.85)}円/kW・月）
+  `;
+
+  const maxB=Math.max(...bills);
+  const minB=Math.min(...bills);
+  const range=maxB-minB;
+  document.getElementById('monthly_bars').innerHTML=bills.map((c,i)=>{
+    const heightPct=range>0?((c-minB)/range*100):100;
+    const kAmount=Math.floor(c/1000);
+    return `<div class="chart-col">
+      <span class="chart-amount">${fmt(c)}円</span>
+      <div class="chart-bar ${SUMMER.includes(i)?'summer':'normal'}" style="height:${Math.max(heightPct,8)}%;">${kAmount}k</div>
+      <div class="chart-label">${MONTHS[i]}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('detail_tbody').innerHTML=monthlyDetails.map(d=>`
+    <tr>
+      <td>${d.month}</td>
+      <td>${fmt(d.kwh)}</td>
+      <td>${fmt(d.basic)}</td>
+      <td>${fmt(d.energy)}</td>
+      <td style="color:${d.fuel>=0?'var(--text)':'var(--success)'};">${d.fuel>=0?'+':''}${fmt(d.fuel)}</td>
+      <td style="color:var(--success);">${fmt(d.support)}</td>
+      <td>${fmt(d.re)}</td>
+      <td style="font-weight:900;color:var(--primary);">${fmt(d.total)}</td>
+    </tr>
+  `).join('');
+
+  renderProviders(annual,kwhs);
+}
+
+function renderProviders(annual,kwhs){
+  const planData=currentPlanData;
+  const areaCode=document.getElementById('area').value;
+  const areaName=AREA_MAPPING[areaCode];
+  const fuels=getFuelForPlan(areaName,planData.name,planData.voltage);
+  const supports=getSupport();
+  const kw=Number(document.getElementById('contract_kw').value)||100;
+  const addDiscount=Number(document.getElementById('additional_discount').value)||0;
+  let html='';
+  let bestSav=0,bestPct=0,bestProv=null;
+
+  if(currentTab==='marubeni'){
+    const marubeniAnn=calcMarubeniAnnual(kwhs,kw,fuels,supports,addDiscount);
+    const sav=annual-marubeniAnn;
+    const pct=annual>0?((sav/annual)*100):0;
+    bestSav=sav;bestPct=pct;bestProv={name:'丸紅新電力'};
+    html=`<div class="provider-card marubeni ${sav>0?'best':''}">
+      ${sav>0?'<div class="crown">⭐ 最安プラン</div>':''}
+      <div class="provider-name">丸紅新電力</div>
+      <div class="provider-type">基本料金1,716.26円/kW（全国一律）・夏季20.74円/kWh・その他季19.65円/kWh</div>
+      <div class="provider-price">${fmt(marubeniAnn)}<span style="font-size:11px;color:var(--text-muted);"> 円/年</span></div>
+      <div class="provider-saving ${sav>=0?'positive':'negative'}">
+        ${sav>=0?`▼ 年間${fmt(sav)}円（${pct.toFixed(1)}%削減）・月${fmt(sav/12)}円の節約`:`▲ 年間${fmt(Math.abs(sav))}円増加`}
+      </div>
+    </div>`;
+  }else if(currentTab==='regil'){
+    const regilAnn=calcRegilAnnual(kwhs,planData,kw,fuels,supports,addDiscount);
+    const sav=annual-regilAnn;
+    const pct=annual>0?((sav/annual)*100):0;
+    bestSav=sav;bestPct=pct;bestProv={name:'レジル株式会社'};
+    html=`<div class="provider-card regil ${sav>0?'best':''}">
+      ${sav>0?'<div class="crown">⭐ 最安プラン</div>':''}
+      <div class="provider-name">レジル株式会社</div>
+      <div class="provider-type">基本料金1,700円/kW（全国一律）+ 旧一電従量単価と同額</div>
+      <div class="provider-price">${fmt(regilAnn)}<span style="font-size:11px;color:var(--text-muted);"> 円/年</span></div>
+      <div class="provider-saving ${sav>=0?'positive':'negative'}">
+        ${sav>=0?`▼ 年間${fmt(sav)}円（${pct.toFixed(1)}%削減）・月${fmt(sav/12)}円の節約`:`▲ 年間${fmt(Math.abs(sav))}円増加`}
+      </div>
+    </div>`;
+  }else if(currentTab==='reduce5'){
+    const reduced=Math.floor(annual*0.95);
+    const sav=annual-reduced;
+    const pct=5;
+    bestSav=sav;bestPct=pct;bestProv={name:'5%削減プラン（イメージ）'};
+    html=`<div class="provider-card reduction ${sav>0?'best':''}">
+      ${sav>0?'<div class="crown">⭐ 参考プラン</div>':''}
+      <div class="provider-name">5%削減プラン（イメージ）</div>
+      <div class="provider-type">現在の年間料金から5%削減された場合のイメージ金額</div>
+      <div class="provider-price">${fmt(reduced)}<span style="font-size:11px;color:var(--text-muted);"> 円/年</span></div>
+      <div class="provider-saving positive">
+        ▼ 年間${fmt(sav)}円（${pct.toFixed(1)}%削減）・月${fmt(sav/12)}円の節約
+      </div>
+    </div>`;
+  }else if(currentTab==='reduce10'){
+    const reduced=Math.floor(annual*0.90);
+    const sav=annual-reduced;
+    const pct=10;
+    bestSav=sav;bestPct=pct;bestProv={name:'10%削減プラン（イメージ）'};
+    html=`<div class="provider-card reduction ${sav>0?'best':''}">
+      ${sav>0?'<div class="crown">⭐ 参考プラン</div>':''}
+      <div class="provider-name">10%削減プラン（イメージ）</div>
+      <div class="provider-type">現在の年間料金から10%削減された場合のイメージ金額</div>
+      <div class="provider-price">${fmt(reduced)}<span style="font-size:11px;color:var(--text-muted);"> 円/年</span></div>
+      <div class="provider-saving positive">
+        ▼ 年間${fmt(sav)}円（${pct.toFixed(1)}%削減）・月${fmt(sav/12)}円の節約
+      </div>
+    </div>`;
+  }else if(currentTab==='jepx'){
+    const jepxAnn=calcJEPXAnnual(kwhs,planData,kw,fuels,supports,addDiscount);
+    const sav=annual-jepxAnn;
+    const pct=annual>0?((sav/annual)*100):0;
+    bestSav=sav;bestPct=pct;bestProv={name:'JEPX市場連動型プランイメージ'};
+    const avgJepx=(JEPX_PRICES.reduce((a,b)=>a+b,0)/12).toFixed(2);
+    html=`<div class="provider-card jepx ${sav>0?'best':''}">
+      ${sav>0?'<div class="crown">⭐ 最安プラン</div>':''}
+      <div class="provider-name">JEPX市場連動型プランイメージ</div>
+      <div class="provider-type">基本料金は現行プランと同額・JEPX市場価格（平均${avgJepx}円/kWh）+ 手数料${JEPX_FEE}円/kWh</div>
+      <div class="provider-price">${fmt(jepxAnn)}<span style="font-size:11px;color:var(--text-muted);"> 円/年</span></div>
+      <div class="provider-saving ${sav>=0?'positive':'negative'}">
+        ${sav>=0?`▼ 年間${fmt(sav)}円（${pct.toFixed(1)}%削減）・月${fmt(sav/12)}円の節約`:`▲ 年間${fmt(Math.abs(sav))}円増加`}
+      </div>
+    </div>`;
+  }
+  document.getElementById('provider_grid').innerHTML=html;
+
+  const regilAnn=calcRegilAnnual(kwhs,planData,kw,fuels,supports,addDiscount);
+  const regilSav=annual-regilAnn;
+  const regilPct=annual>0?((regilSav/annual)*100):0;
+  if(regilSav>bestSav){bestSav=regilSav;bestPct=regilPct;bestProv={name:'レジル株式会社'};}
+
+  const marubeniAnn=calcMarubeniAnnual(kwhs,kw,fuels,supports,addDiscount);
+  const marubeniSav=annual-marubeniAnn;
+  const marubeniPct=annual>0?((marubeniSav/annual)*100):0;
+  if(marubeniSav>bestSav){bestSav=marubeniSav;bestPct=marubeniPct;bestProv={name:'丸紅新電力'};}
+
+  const jepxAnn=calcJEPXAnnual(kwhs,planData,kw,fuels,supports,addDiscount);
+  const jepxSav=annual-jepxAnn;
+  const jepxPct=annual>0?((jepxSav/annual)*100):0;
+  if(jepxSav>bestSav){bestSav=jepxSav;bestPct=jepxPct;bestProv={name:'JEPX市場連動型プランイメージ'};}
+
+  const reduce5Sav=annual-Math.floor(annual*0.95);
+  if(reduce5Sav>bestSav){bestSav=reduce5Sav;bestPct=5;bestProv={name:'5%削減プラン（イメージ）'};}
+
+  const reduce10Sav=annual-Math.floor(annual*0.90);
+  if(reduce10Sav>bestSav){bestSav=reduce10Sav;bestPct=10;bestProv={name:'10%削減プラン（イメージ）'};}
+
+  if(bestProv&&bestSav>0){
+    document.getElementById('best_saving_amount').textContent=`▼ ${fmt(bestSav)}円（${bestPct.toFixed(1)}%削減）`;
+    document.getElementById('best_saving_sub').textContent=`${bestProv.name}への切替で月平均${fmt(bestSav/12)}円・10年で${fmt(bestSav*10)}円の節約（試算）`;
+  }else{
+    document.getElementById('best_saving_amount').textContent='現在のプランが最適';
+    document.getElementById('best_saving_sub').textContent='現在の料金プランは比較的お得です';
+  }
+}
+
+function downloadExcel(){
+  const data=calculationData;
+  const kw=data.kw;
+  const totalKwh=data.totalKwh;
+  
+  const summaryData=[
+    ['e-dash 電力シミュレーター 試算結果'],
+    [''],
+    ['基本情報'],
+    ['エリア',data.areaName],
+    ['プラン',data.planName],
+    ['契約電力',kw,'kW'],
+    ['年間使用量',totalKwh,'kWh'],
+    ['年間CO2排出量',data.co2.toFixed(2),'t-CO2'],
+    [''],
+    ['年間料金'],
+    ['合計',data.annual,'円'],
+    ['月平均',Math.floor(data.annual/12),'円'],
+    [''],
+    ['月別詳細']
+  ];
+  
+  const headerRow=['月','使用量(kWh)','基本料金(円)','電力量料金(円)','燃調費(円)','国支援(円)','再エネ賦課金(円)','月額(税込)'];
+  summaryData.push(headerRow);
+  
+  monthlyDetails.forEach(d=>{
+    summaryData.push([d.month,d.kwh,d.basic,d.energy,d.fuel,d.support,d.re,d.total]);
+  });
+  
+  const avgSummerRate=(data.summerRate-data.addDiscount).toFixed(2);
+  const avgOtherRate=(data.otherRate-data.addDiscount).toFixed(2);
+  
+  const comparisonData=[
+    ['','現供給','新電力'],
+    ['合計',data.annual,''],
+    ['基本料金合計',data.basicAnn,''],
+    ['従量料金合計',data.energyAnn+data.fuelAnn+data.supportAnn,''],
+    ['値引き等',data.addDiscount>0?`-${data.addDiscount}円/kWh`:'0',''],
+    ['再エネ賦課金',data.reAnn,''],
+    ['基本料金単価',data.basicPerKw,''],
+    ['従量料金単価（夏季）',avgSummerRate,''],
+    ['従量料金単価（その他季）',avgOtherRate,''],
+    ['差額','',''],
+    ['差割合（％）','','']
+  ];
+  
+  const wb=XLSX.utils.book_new();
+  
+  const ws1=XLSX.utils.aoa_to_sheet(summaryData);
+  ws1['!cols']=[{wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:15},{wch:15}];
+  XLSX.utils.book_append_sheet(wb,ws1,'試算結果');
+  
+  const ws2=XLSX.utils.aoa_to_sheet(comparisonData);
+  ws2['!cols']=[{wch:20},{wch:15},{wch:15}];
+  XLSX.utils.book_append_sheet(wb,ws2,'比較表');
+  
+  const fileName=`edash_電力試算_${data.areaName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+  XLSX.writeFile(wb,fileName);
+}
+
+function downloadPPT(){
+  const data=calculationData;
+  const pptx=new PptxGenJS();
+  
+  const slide=pptx.addSlide();
+  
+  slide.addText('e-dash 電力シミュレーター 比較表',{
+    x:0.5,y:0.3,w:9,h:0.6,
+    fontSize:24,bold:true,color:'02BFA6',align:'center'
+  });
+  
+  const avgSummerRate=(data.summerRate-data.addDiscount).toFixed(2);
+  const avgOtherRate=(data.otherRate-data.addDiscount).toFixed(2);
+  
+  const tableData=[
+    [{text:'項目',options:{bold:true,fill:'02BFA6',color:'FFFFFF'}},
+     {text:'現供給',options:{bold:true,fill:'02BFA6',color:'FFFFFF'}},
+     {text:'新電力',options:{bold:true,fill:'02BFA6',color:'FFFFFF'}}],
+    ['合計',fmt(data.annual)+'円',''],
+    ['基本料金合計',fmt(data.basicAnn)+'円',''],
+    ['従量料金合計',fmt(data.energyAnn+data.fuelAnn+data.supportAnn)+'円',''],
+    ['値引き等',data.addDiscount>0?`-${data.addDiscount}円/kWh`:'0',''],
+    ['再エネ賦課金',fmt(data.reAnn)+'円',''],
+    ['基本料金単価',data.basicPerKw.toFixed(2)+'円/kW',''],
+    ['従量料金単価（夏季）',avgSummerRate+'円/kWh',''],
+    ['従量料金単価（その他季）',avgOtherRate+'円/kWh',''],
+    ['差額','',''],
+    ['差割合（％）','','']
+  ];
+  
+  slide.addTable(tableData,{
+    x:1.0,y:1.2,w:8,h:4.5,
+    fontSize:12,
+    border:{pt:1,color:'CCCCCC'},
+    align:'center',
+    valign:'middle'
+  });
+  
+  slide.addText(`${data.areaName} ${data.planName}　契約電力: ${fmt(data.kw)}kW`,{
+    x:0.5,y:6.2,w:9,h:0.4,
+    fontSize:10,color:'666666',align:'center'
+  });
+  
+  pptx.writeFile({fileName:`edash_電力試算_比較表_${new Date().toISOString().split('T')[0]}.pptx`});
+}
+
+updatePlans('hokkaido');
+buildFuelGrid('hokkaido');
+updateTotal();
+</script>
+</body>
+</html>
